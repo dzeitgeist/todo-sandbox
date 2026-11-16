@@ -21,6 +21,11 @@ export function TodoItem({ todo, onToggle, onDelete }: Props) {
       <span className={`flex-1 ${todo.done ? "text-zinc-400 line-through" : ""}`}>
         {todo.title}
       </span>
+      {todo.priority !== "normal" && (
+        <span className={`priority-badge priority-${todo.priority}`}>
+          {todo.priority}
+        </span>
+      )}
       <button
         onClick={() => onDelete(todo.id)}
         className="text-sm text-zinc-500 hover:text-red-600"

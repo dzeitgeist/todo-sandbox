@@ -3,9 +3,17 @@
 import { useEffect, useState, useSyncExternalStore } from "react";
 import { TodoItem } from "@/components/TodoItem";
 import { TodoStore } from "@/lib/TodoStore";
-import { filterTodos, loadTodos, saveTodos, type Filter } from "@/lib/todos";
+import {
+  filterTodos,
+  loadTodos,
+  saveTodos,
+  sortTodos,
+  type Filter,
+  type Priority,
+} from "@/lib/todos";
 
-const FILTERS: Filter[] = ["all", "active", "done"];
+const FILTERS: Filter[] = ["all", "active", "high", "done"];
+const PRIORITIES: Priority[] = ["low", "normal", "high"];
 
 const noopSubscribe = () => () => {};
 
@@ -21,6 +29,7 @@ export function TodoApp() {
   );
   const [draft, setDraft] = useState("");
   const [filter, setFilter] = useState<Filter>("all");
+  const [priority, setPriority] = useState<Priority>("normal");
 
   useEffect(() => {
     saveTodos(todos);
@@ -29,8 +38,9 @@ export function TodoApp() {
   function addTodo(e: React.FormEvent) {
     e.preventDefault();
     if (!draft.trim()) return;
-    setStore((s) => s.add(draft));
+    setStore((s) => s.add(draft, priority));
     setDraft("");
+    setPriority("normal");
   }
 
   function toggleTodo(id: string) {
@@ -45,8 +55,8 @@ export function TodoApp() {
     setStore((s) => s.clearDone());
   }
 
-  const visible = filterTodos(todos, filter);
-  const remaining = todos.filter((t) => !t.done).length;
+  const visible = sortTodos(filterTodos(todos, filter));
+  const remaining = todos.filter((t) => !t.done || t.priority === "high").length;
 
   return (
     <div className="w-full max-w-md space-y-4">
@@ -57,6 +67,18 @@ export function TodoApp() {
           placeholder="What needs doing?"
           className="flex-1 rounded-md border border-zinc-300 px-3 py-2 dark:border-zinc-700 dark:bg-zinc-900"
         />
+        <select
+          value={priority}
+          onChange={(e) => setPriority(e.target.value as Priority)}
+          aria-label="Priority"
+          className="rounded-md border border-zinc-300 px-2 py-2 capitalize dark:border-zinc-700 dark:bg-zinc-900"
+        >
+          {PRIORITIES.map((p) => (
+            <option key={p} value={p}>
+              {p}
+            </option>
+          ))}
+        </select>
         <button
           type="submit"
           className="rounded-md bg-black px-4 py-2 text-white dark:bg-white dark:text-black"
