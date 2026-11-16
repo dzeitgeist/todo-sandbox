@@ -1,6 +1,6 @@
 // Keeps every change to the todo list in one place. Each method returns a new store instead of
 // mutating, so React sees a new value and re-renders.
-import { createTodo, type Todo } from "./todos";
+import { createTodo, type Priority, type Todo } from "./todos";
 
 export class TodoStore {
   private readonly todos: Todo[];
@@ -13,13 +13,17 @@ export class TodoStore {
     return this.todos;
   }
 
-  add(title: string): TodoStore {
-    return new TodoStore([createTodo(title), ...this.todos]);
+  add(title: string, priority?: Priority): TodoStore {
+    return new TodoStore([createTodo(title, priority), ...this.todos]);
   }
 
   toggle(id: string): TodoStore {
     return new TodoStore(
-      this.todos.map((t) => (t.id === id ? { ...t, done: !t.done } : t)),
+      this.todos.map((t) =>
+        t.id === id
+          ? { ...t, done: !t.done, completedAt: t.done ? undefined : Date.now() }
+          : t,
+      ),
     );
   }
 

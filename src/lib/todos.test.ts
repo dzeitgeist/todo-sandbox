@@ -1,16 +1,17 @@
 import { describe, expect, test } from "vitest";
 import { TodoStore } from "./TodoStore";
-import { createTodo, filterTodos, type Todo } from "./todos";
+import { createTodo, filterTodos, sortTodos, type Priority, type Todo } from "./todos";
 
-function todo(title: string, done = false): Todo {
-  return { ...createTodo(title), done };
+function todo(title: string, done = false, priority: Priority = "normal"): Todo {
+  return { ...createTodo(title, priority), done };
 }
 
 describe("createTodo", () => {
-  test("trims the title and starts not done", () => {
+  test("trims the title and starts not done, at normal priority", () => {
     const created = createTodo("  buy milk  ");
     expect(created.title).toBe("buy milk");
     expect(created.done).toBe(false);
+    expect(created.priority).toBe("normal");
   });
 });
 
@@ -28,6 +29,18 @@ describe("filterTodos", () => {
   test("done returns only finished todos", () => {
     expect(filterTodos(todos, "done").map((t) => t.title)).toEqual(["b"]);
   });
+
+  test("high returns unfinished high-priority todos", () => {
+    const mixed = [todo("x", false, "high"), todo("y", true, "high"), todo("z")];
+    expect(filterTodos(mixed, "high").map((t) => t.title)).toEqual(["x"]);
+  });
+});
+
+describe("sortTodos", () => {
+  test("puts high priority first and low priority last", () => {
+    const todos = [todo("l", false, "low"), todo("n"), todo("h", false, "high")];
+    expect(sortTodos(todos).map((t) => t.title)).toEqual(["h", "n", "l"]);
+  });
 });
 
 describe("TodoStore", () => {
@@ -36,10 +49,11 @@ describe("TodoStore", () => {
     expect(store.list().map((t) => t.title)).toEqual(["new", "old"]);
   });
 
-  test("toggle flips only the matching todo", () => {
+  test("toggle flips only the matching todo and records when it was done", () => {
     const [a, b] = [todo("a"), todo("b")];
     const store = new TodoStore([a, b]).toggle(a.id);
     expect(store.list().map((t) => t.done)).toEqual([true, false]);
+    expect(store.list()[0].completedAt).toBeTypeOf("number");
   });
 
   test("clearDone removes finished todos", () => {
