@@ -22,18 +22,28 @@ TITLES = [
     "Water the plants",
 ]
 
+PRIORITIES = ["normal", "high", "low"]  # must match Priority in src/lib/todos.ts
 
-def make_todo(title, done=False):
+
+def make_todo(title, done=False, priority="normal"):
     return {
         "id": str(uuid.uuid4()),
         "title": title,
         "done": done,
+        "priority": priority,
         "createdAt": int(time.time() * 1000),
     }
 
 
 def build_seed(count):
-    return [make_todo(TITLES[i % len(TITLES)], done=i % 3 == 0) for i in range(count)]
+    return [
+        make_todo(
+            TITLES[i % len(TITLES)],
+            done=i % 3 == 0,
+            priority=PRIORITIES[i % len(PRIORITIES)],
+        )
+        for i in range(count)
+    ]
 
 
 class SnippetPrinter:
