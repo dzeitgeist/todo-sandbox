@@ -2,21 +2,16 @@
 
 import { useEffect, useState, useSyncExternalStore } from "react";
 import { TodoItem } from "@/components/TodoItem";
-import {
-  createTodo,
-  filterTodos,
-  loadTodos,
-  saveTodos,
-  type Filter,
-  type Todo,
-} from "@/lib/todos";
+import { TodoStore } from "@/lib/TodoStore";
+import { filterTodos, loadTodos, saveTodos, type Filter } from "@/lib/todos";
 
 const FILTERS: Filter[] = ["all", "active", "done"];
 
 const noopSubscribe = () => () => {};
 
 export function TodoApp() {
-  const [todos, setTodos] = useState<Todo[]>(loadTodos);
+  const [store, setStore] = useState(() => new TodoStore(loadTodos()));
+  const todos = store.list();
   // false during SSR and hydration, true afterwards - avoids a mismatch
   // between the server's empty list and the client's stored todos.
   const loaded = useSyncExternalStore(
@@ -34,22 +29,20 @@ export function TodoApp() {
   function addTodo(e: React.FormEvent) {
     e.preventDefault();
     if (!draft.trim()) return;
-    setTodos((prev) => [createTodo(draft), ...prev]);
+    setStore((s) => s.add(draft));
     setDraft("");
   }
 
   function toggleTodo(id: string) {
-    setTodos((prev) =>
-      prev.map((t) => (t.id === id ? { ...t, done: !t.done } : t)),
-    );
+    setStore((s) => s.toggle(id));
   }
 
   function deleteTodo(id: string) {
-    setTodos((prev) => prev.filter((t) => t.id !== id));
+    setStore((s) => s.remove(id));
   }
 
   function clearDone() {
-    setTodos((prev) => prev.filter((t) => !t.done));
+    setStore((s) => s.clearDone());
   }
 
   const visible = filterTodos(todos, filter);
